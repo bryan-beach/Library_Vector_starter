@@ -1,5 +1,10 @@
 #include "../includes_usr/fileIO.h"
+#include <fstream>
+#include <vector>
+#include <bits/stdc++.h>
+
 using namespace std;
+
 /* clears, then loads books from the file filename
  * returns  COULD_NOT_OPEN_FILE if cannot open filename
  * 			NO_BOOKS_IN_LIBRARY if there are 0 entries in books
@@ -7,7 +12,66 @@ using namespace std;
  * */
 int loadBooks(std::vector<book> &books, const char* filename)
 {
-	return SUCCESS;
+	ifstream myInputFile;
+	myInputFile.open(filename, ios::in);
+
+	if (myInputFile.is_open()) {
+
+		std::string line;
+		vector <string> tokens;
+		int i = 0;
+
+		while (!myInputFile.eof()) {
+
+			getline(myInputFile, line);
+
+			tokens.clear();
+			stringstream check1(line);
+			string intermediate;
+
+			while(getline(check1, intermediate, ','))
+			{
+				tokens.push_back(intermediate);
+			}
+
+			if (tokens.size() >= 1) {
+				int bookId = atoi(tokens[0].c_str());
+				books.push_back(book());
+				books[i].book_id = bookId;
+				books[i].title = tokens[1];
+				books[i].author = tokens[2];
+				int value = atoi(tokens[3].c_str());
+				switch (value)
+				{
+				case 0:
+					books[i].state = UNKNOWN;
+					break;
+				case 1:
+					books[i].state = IN;
+					break;
+				case 2:
+					books[i].state = OUT;
+				}
+				int id = atoi(tokens[4].c_str());
+				books[i].loaned_to_patron_id = id;
+			}
+
+			i++;
+
+		}
+
+		if (books.size() < 1) {
+			return NO_BOOKS_IN_LIBRARY;
+		}
+
+		return SUCCESS;
+
+	} else {
+
+		return COULD_NOT_OPEN_FILE;
+
+	}
+
 }
 
 /* serializes books to the file filename
