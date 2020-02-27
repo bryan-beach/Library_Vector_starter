@@ -12,6 +12,8 @@ using namespace std;
  * */
 int loadBooks(std::vector<book> &books, const char* filename)
 {
+	books.clear();
+
 	ifstream myInputFile;
 	myInputFile.open(filename, ios::in);
 
@@ -60,6 +62,8 @@ int loadBooks(std::vector<book> &books, const char* filename)
 
 		}
 
+		myInputFile.close();
+
 		if (books.size() < 1) {
 			return NO_BOOKS_IN_LIBRARY;
 		}
@@ -81,6 +85,37 @@ int loadBooks(std::vector<book> &books, const char* filename)
  * */
 int saveBooks(std::vector<book> &books, const char* filename)
 {
+
+	if (books.size() < 1) {
+		return NO_BOOKS_IN_LIBRARY;
+	}
+
+	ofstream myOutputFile;
+	myOutputFile.open(filename);
+
+	if (myOutputFile.is_open()) {
+
+		for (book page : books) {
+			myOutputFile << page.book_id;
+			myOutputFile << ",";
+
+			myOutputFile << page.title;
+			myOutputFile << ",";
+
+			myOutputFile << page.author;
+			myOutputFile << ",";
+
+			myOutputFile << page.state;
+			myOutputFile << ",";
+
+			myOutputFile << page.loaned_to_patron_id;
+			myOutputFile << "\n";
+		}
+
+	} else {
+		return COULD_NOT_OPEN_FILE;
+	}
+
 	return SUCCESS;
 }
 
@@ -91,7 +126,60 @@ int saveBooks(std::vector<book> &books, const char* filename)
  * */
 int loadPatrons(std::vector<patron> &patrons, const char* filename)
 {
-	return SUCCESS;
+
+	patrons.clear();
+
+	ifstream myInputFile;
+		myInputFile.open(filename, ios::in);
+
+		if (myInputFile.is_open()) {
+
+			std::string line;
+			vector <string> tokens;
+			int i = 0;
+
+			while (!myInputFile.eof()) {
+
+				getline(myInputFile, line);
+
+				tokens.clear();
+				stringstream check1(line);
+				string intermediate;
+
+				while(getline(check1, intermediate, ','))
+				{
+					tokens.push_back(intermediate);
+				}
+
+				if (tokens.size() >= 1) {
+					patrons.push_back(patron());
+
+					int patronId = atoi(tokens[0].c_str());
+					patrons[i].patron_id = patronId;
+					patrons[i].name = tokens[1];
+					int numBooks = atoi(tokens[2].c_str());
+					patrons[i].number_books_checked_out = numBooks;
+
+				}
+
+				i++;
+
+			}
+
+			myInputFile.close();
+
+			if (patrons.size() < 1) {
+				return NO_PATRONS_IN_LIBRARY;
+			}
+
+			return SUCCESS;
+
+		} else {
+
+			return COULD_NOT_OPEN_FILE;
+
+		}
+
 }
 
 /* serializes patrons to the file filename
@@ -101,5 +189,29 @@ int loadPatrons(std::vector<patron> &patrons, const char* filename)
  * */
 int savePatrons(std::vector<patron> &patrons, const char* filename)
 {
-	return SUCCESS;
+	if (patrons.size() < 1) {
+			return NO_BOOKS_IN_LIBRARY;
+		}
+
+		ofstream myOutputFile;
+		myOutputFile.open(filename);
+
+		if (myOutputFile.is_open()) {
+
+			for (patron person : patrons) {
+				myOutputFile << person.patron_id;
+				myOutputFile << ",";
+
+				myOutputFile << person.name;
+				myOutputFile << ",";
+
+				myOutputFile << person.number_books_checked_out;
+				myOutputFile << "\n";
+			}
+
+		} else {
+			return COULD_NOT_OPEN_FILE;
+		}
+
+		return SUCCESS;
 }

@@ -13,12 +13,17 @@ using namespace std;
 //NOTE: also make sure you save patron and book data to disk any time you make a change to them
 //NOTE: for files where data is stored see constants.h BOOKFILE and PATRONFILE
 
+vector<book> books;
+vector<patron> patrons;
+
+
 /*
  * clear books and patrons containers
  * then reload them from disk 
  */
 void reloadAllData(){
-
+	loadBooks(books, BOOKFILE.c_str());
+	loadPatrons(patrons, PATRONFILE.c_str());
 }
 
 /* checkout a book to a patron
