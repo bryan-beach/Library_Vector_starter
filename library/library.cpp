@@ -47,6 +47,40 @@ void reloadAllData(){
  *         TOO_MANY_OUT patron has the max number of books allowed checked out
  */
 int checkout(int bookid, int patronid){
+	reloadAllData();
+
+	bool patronExists = false;
+	int patronIndex;
+
+	for (int i=0;i < patrons.size();i++) {
+		if (patrons[i].patron_id == patronid) {
+			patronExists = true;
+			patronIndex = i;
+			break;
+		}
+	}
+
+	if (!patronExists) {
+		return PATRON_NOT_ENROLLED;
+	}
+
+	//check if patron can check out more books dumbfucker
+
+	bool bookExists = false;
+	int bookIndex;
+
+	for (int i=0;i < books.size();i++) {
+		if (books[i].book_id == bookid) {
+			bookExists = true;
+			bookIndex = i;
+			break;
+		}
+	}
+
+	if (!bookExists) {
+		return BOOK_NOT_IN_COLLECTION;
+	}
+
 	return SUCCESS;
 }
 
