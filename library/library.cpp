@@ -49,6 +49,21 @@ void reloadAllData(){
 int checkout(int bookid, int patronid){
 	reloadAllData();
 
+	bool bookExists = false;
+	int bookIndex;
+
+	for (int i=0;i < books.size();i++) {
+		if (books[i].book_id == bookid) {
+			bookExists = true;
+			bookIndex = i;
+			break;
+		}
+	}
+
+	if (!bookExists) {
+		return BOOK_NOT_IN_COLLECTION;
+	}
+
 	bool patronExists = false;
 	int patronIndex;
 
@@ -64,22 +79,17 @@ int checkout(int bookid, int patronid){
 		return PATRON_NOT_ENROLLED;
 	}
 
-	//check if patron can check out more books dumbfucker
-
-	bool bookExists = false;
-	int bookIndex;
-
-	for (int i=0;i < books.size();i++) {
-		if (books[i].book_id == bookid) {
-			bookExists = true;
-			bookIndex = i;
-			break;
-		}
+	if (patrons[patronIndex].number_books_checked_out >= 5) {
+		return TOO_MANY_OUT;
 	}
 
-	if (!bookExists) {
-		return BOOK_NOT_IN_COLLECTION;
-	}
+	books[bookIndex].state = OUT;
+	books[bookIndex].loaned_to_patron_id = patrons[patronIndex].patron_id;
+
+	patrons[patronIndex].number_books_checked_out++;
+
+	saveBooks(books, BOOKFILE.c_str());
+	savePatrons(patrons, PATRONFILE.c_str());
 
 	return SUCCESS;
 }
@@ -97,6 +107,41 @@ int checkout(int bookid, int patronid){
  * 		   BOOK_NOT_IN_COLLECTION
  */
 int checkin(int bookid){
+
+	reloadAllData();
+
+	bool bookExists = false;
+	int bookIndex;
+
+	for (int i=0;i < books.size();i++) {
+		if (books[i].book_id == bookid) {
+			bookExists = true;
+			bookIndex = i;
+			break;
+		}
+	}
+
+	if (!bookExists) {
+		return BOOK_NOT_IN_COLLECTION;
+	}
+
+	int patronid = books[bookIndex].loaned_to_patron_id;
+	int patronIndex;
+
+	for (int i=0;i < patrons.size();i++) {
+		if (patrons[i].patron_id == patronid) {
+			patronIndex = i;
+			break;
+		}
+	}
+
+	patrons[patronIndex].number_books_checked_out--;
+	books[bookIndex].loaned_to_patron_id = NO_ONE;
+	books[bookIndex].state = IN;
+
+	saveBooks(books, BOOKFILE.c_str());
+	savePatrons(patrons, PATRONFILE.c_str());
+
 	return SUCCESS;
 }
 
@@ -110,7 +155,19 @@ int checkin(int bookid){
  *    the patron_id of the person added
  */
 int enroll(std::string &name){
-	return 0;
+	reloadAllData();
+
+	int patronid = patrons.size();
+	patron person;
+	person.name = name;
+	person.number_books_checked_out = 0;
+	person.patron_id = patronid;
+
+	patrons.push_back(person);
+
+	savePatrons(patrons, PATRONFILE.c_str());
+
+	return patronid;
 }
 
 /*
@@ -119,7 +176,8 @@ int enroll(std::string &name){
  * 
  */
 int numbBooks(){
-	return 0;
+	reloadAllData();
+	return books.size();
 }
 
 /*
@@ -127,7 +185,8 @@ int numbBooks(){
  * (ie. if 3 patrons returns 3)
  */
 int numbPatrons(){
-	return 0;
+	reloadAllData();
+	return patrons.size();
 }
 
 /*the number of books patron has checked out
@@ -136,7 +195,23 @@ int numbPatrons(){
  *        or PATRON_NOT_ENROLLED         
  */
 int howmanybooksdoesPatronHaveCheckedOut(int patronid){
-	return 0;
+
+	bool patronExists = false;
+	int patronIndex;
+
+	for (int i=0;i < patrons.size();i++) {
+		if (patrons[i].patron_id == patronid) {
+			patronExists = true;
+			patronIndex = i;
+			break;
+		}
+	}
+
+	if (!patronExists) {
+		return PATRON_NOT_ENROLLED;
+	}
+
+	return patrons[patronIndex].number_books_checked_out;
 }
 
 /* search through patrons container to see if patronid is there
@@ -146,6 +221,24 @@ int howmanybooksdoesPatronHaveCheckedOut(int patronid){
  *         PATRON_NOT_ENROLLED no patron with this patronid
  */
 int whatIsPatronName(std::string &name,int patronid){
+
+	bool patronExists = false;
+	int patronIndex;
+
+	for (int i=0;i < patrons.size();i++) {
+		if (patrons[i].patron_id == patronid) {
+			patronExists = true;
+			patronIndex = i;
+			break;
+		}
+	}
+
+	if (!patronExists) {
+		return PATRON_NOT_ENROLLED;
+	}
+
+	name = patrons[patronIndex].name;
+
 	return SUCCESS;
 }
 
